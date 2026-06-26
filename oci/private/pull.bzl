@@ -133,7 +133,6 @@ def _download(rctx, authn, identifier, output, resource, headers = {}, allow_fai
         resource = resource,
         identifier = identifier,
     )
-    util.warning(rctx, "===========> _download registry_url={}".format(registry_url))
 
     sha256 = ""
 
@@ -142,9 +141,10 @@ def _download(rctx, authn, identifier, output, resource, headers = {}, allow_fai
     else:
         util.warning(rctx, "Fetching from {}@{} without an integrity hash, result will not be cached.".format(rctx.attr.repository, identifier))
 
+    util.warning(rctx, "===========> _download registry_url={}, sha256={}".format(registry_url, sha256))
     kwargs = dict(
         output = output,
-        sha256 = sha256,
+        # sha256 = sha256,
         url = registry_url,
         auth = {registry_url: auth},
         allow_fail = allow_fail,
@@ -156,7 +156,6 @@ def _download(rctx, authn, identifier, output, resource, headers = {}, allow_fai
         kwargs["headers"] = headers
 
     util.warning(rctx, "===========> _download kwargs={}".format(kwargs))
-    kwargs["sha256"] = ""
     return rctx.download(**kwargs)
 
 def _download_manifest(rctx, authn, identifier, output):
