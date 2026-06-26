@@ -178,9 +178,11 @@ def _download_manifest(rctx, authn, identifier, output):
         bytes = rctx.read(output)
         manifest = json.decode(bytes)
         digest = "sha256:{}".format(result.sha256)
+        util.warning(rctx, "===========> _download_manifest SUCCEED digest={} from result {} with manifest:\n{}".format(digest, result, manifest))
         if manifest["schemaVersion"] == 1:
             fail(SCHEMA1_ERROR)
     else:
+        util.warning(rctx, "===========> _download_manifest FAILED, result {}".format(result))
         explanation = authn.explain()
         if explanation:
             util.warning(rctx, explanation)
