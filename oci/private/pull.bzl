@@ -118,6 +118,7 @@ def _digest_into_blob_path(digest):
 def _download(rctx, authn, identifier, output, resource, headers = {}, allow_fail = False, block = True):
     "Use the Bazel Downloader to fetch from the remote registry"
 
+    util.warning(rctx, "===========> _download using (authn={}, identifier={}, resource={})".format(authn, identifier, resource))
     if resource != "blobs" and resource != "manifests":
         fail("resource must be blobs or manifests")
 
@@ -132,6 +133,7 @@ def _download(rctx, authn, identifier, output, resource, headers = {}, allow_fai
         resource = resource,
         identifier = identifier,
     )
+    util.warning(rctx, "===========> _download registry_url={}".format(registry_url))
 
     sha256 = ""
 
@@ -153,6 +155,7 @@ def _download(rctx, authn, identifier, output, resource, headers = {}, allow_fai
         kwargs["block"] = block
         kwargs["headers"] = headers
 
+    util.warning(rctx, "===========> _download kwargs={}".format(kwargs))
     return rctx.download(**kwargs)
 
 def _download_manifest(rctx, authn, identifier, output):
@@ -160,6 +163,7 @@ def _download_manifest(rctx, authn, identifier, output):
     manifest = None
     digest = None
 
+    util.warning(rctx, "===========> _download_manifest using (authn={}, identifier={})".format(authn, identifier))
     result = _download(
         rctx,
         authn,
