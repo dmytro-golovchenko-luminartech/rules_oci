@@ -102,7 +102,9 @@ def _determine_media_type(manifest):
 
 def _config_path(rctx):
     if rctx.attr.config:
+        util.warning(rctx, "===========> _config_path usiing config {} (image={}, digest={}, platforms={})".format(rctx.attr.config))
         return rctx.path(rctx.attr.config)
+    util.warning(rctx, "===========> _config_path found no config in attributes {}".format(rctx.attr))
     return None
 
 def _is_tag(str):
