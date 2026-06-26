@@ -156,6 +156,7 @@ def _download(rctx, authn, identifier, output, resource, headers = {}, allow_fai
         kwargs["headers"] = headers
 
     util.warning(rctx, "===========> _download kwargs={}".format(kwargs))
+    kwargs["sha256"] = ""
     return rctx.download(**kwargs)
 
 def _download_manifest(rctx, authn, identifier, output):
@@ -181,6 +182,10 @@ def _download_manifest(rctx, authn, identifier, output):
         util.warning(rctx, "===========> _download_manifest SUCCEED digest={} from result {} with manifest:\n{}".format(digest, result, manifest))
         if manifest["schemaVersion"] == 1:
             fail(SCHEMA1_ERROR)
+        if identifier.startswith("sha256:"):
+            identifier_sha256 = identifier[len("sha256:"):]
+            if identifier_sha256 != result.sha256:
+                util.warning("===========> _download_manifest Downloaded manifest digest {} does not match requested digest {}".format(result.sha256, identifier_sha256))
     else:
         util.warning(rctx, "===========> _download_manifest FAILED, result {}".format(result))
         explanation = authn.explain()
