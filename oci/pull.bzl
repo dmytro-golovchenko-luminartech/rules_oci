@@ -226,6 +226,8 @@ def oci_pull(
         bazel_tags: Bazel tags to be propagated to generated rules.
     """
 
+    print("===========> Running custom oci_pull rule for {} (image={}, digest={}, platforms={})".format(name, image, digest, platforms))
+
     # Check syntax sugar for registry/repository in place of image
     if (repository and not registry) or (registry and not repository):
         fail("When one of repository or registry is set, the other must be as well")
