@@ -219,8 +219,8 @@ def _curl_download(rctx, url, allow_fail, **kwargs):
         if key == "output":
             cmd.extend(["-o", value])
         elif key == "headers":
-            for header in value:
-                cmd.extend(["-H", header])
+            for header, value in value.items():
+                cmd.extend(["-H", "{}: {}".format(header, value)])
         elif key == "auth":
             if type(value) != "dict":
                 fail("auth must be a dict")
