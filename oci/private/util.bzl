@@ -241,7 +241,7 @@ def _curl_download(rctx, url, allow_fail, **kwargs):
     curl_result = rctx.execute(cmd)
     if curl_result.return_code != 0:
         if allow_fail:
-            return struct(success = False, **curl_result.to_dict())
+            return struct(success = False, **curl_result)
         fail("curl failed with return code {}: \nSTDOUT:\n{}\nSTDERR:\n{}".format(
             curl_result.return_code,
             curl_result.stdout,
@@ -249,17 +249,17 @@ def _curl_download(rctx, url, allow_fail, **kwargs):
         ))
     sha256sum = _sha256(rctx, kwargs["output"])
     size_bytes = rctx.execute(["stat", "-c", "%s", kwargs["output"]]).stdout.strip()
-    curl_result = struct(sha256 = sha256sum, size_bytes = size_bytes, **curl_result.to_dict())
+    curl_result = struct(sha256 = sha256sum, size_bytes = size_bytes, **curl_result)
     if "sha256" in kwargs:
         if sha256sum != kwargs["sha256"]:
             if allow_fail:
-                return struct(success = False, **curl_result.to_dict())
+                return struct(success = False, **curl_result)
             fail("SHA256 mismatch for {}: expected {}, got {}".format(
                 kwargs["output"],
                 kwargs["sha256"],
                 sha256sum,
             ))
-    return struct(success = True, **curl_result.to_dict())
+    return struct(success = True, **curl_result)
 
 def _maybe_wrap_launcher_for_windows(ctx, bash_launcher):
     """Windows cannot directly execute a shell script.
