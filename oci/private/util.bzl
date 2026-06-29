@@ -256,7 +256,7 @@ def _curl_download(rctx, url, allow_fail, **kwargs):
                 kwargs["sha256"],
                 sha256sum,
             ))
-    retun struct(**curl_result.to_dict(), success = True)
+    return struct(**curl_result.to_dict(), success = True)
 
 def _maybe_wrap_launcher_for_windows(ctx, bash_launcher):
     """Windows cannot directly execute a shell script.
