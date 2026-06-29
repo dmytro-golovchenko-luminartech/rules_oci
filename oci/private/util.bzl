@@ -231,9 +231,9 @@ def _curl_download(rctx, url, allow_fail, **kwargs):
             if "type" not in value:
                 fail("auth dict for url must contain 'type' key")
             if value["type"] == "basic":
-                if "username" not in value or "password" not in value:
-                    fail("auth dict for url must contain 'username' and 'password' keys for basic auth")
-                cmd.extend(["-u", "{}:{}".format(value["username"], value["password"])])
+                if "login" not in value or "password" not in value:
+                    fail("auth dict for url must contain 'login' and 'password' keys for basic auth")
+                cmd.extend(["-u", "{}:{}".format(value["login"], value["password"])])
             else:
                 fail("Unsupported auth type: {}".format(value["type"]))
             cmd.extend(["-u", value])
