@@ -183,6 +183,7 @@ def oci_pull(
     tag = None,
     reproducible = True,
     is_bzlmod = False,
+    manifest_curl_download = False,
     config = None,
     bazel_tags = []
 ):
@@ -224,6 +225,7 @@ def oci_pull(
         config: Label to a `.docker/config.json` file.
         is_bzlmod: whether the oci_pull is being called from a module extension
         bazel_tags: Bazel tags to be propagated to generated rules.
+        manifest_curl_download: whether to use curl to download the manifest instead of Bazel's downloader. This is useful for registries that require authentication via a credential helper, as Bazel's downloader does not support this. Defaults to False.
     """
 
     print("===========> Running custom oci_pull rule for {} (image={}, digest={}, platforms={})".format(name, image, digest, platforms))
@@ -272,6 +274,7 @@ def oci_pull(
                 target_name = plat_name,
                 config = config,
                 bazel_tags = bazel_tags,
+                manifest_curl_download = manifest_curl_download,
             )
 
             if plat in _PLATFORM_TO_BAZEL_CPU:
@@ -296,6 +299,7 @@ def oci_pull(
             target_name = single_platform,
             config = config,
             bazel_tags = bazel_tags,
+            manifest_curl_download = manifest_curl_download,
         )
 
     oci_alias(
@@ -313,4 +317,5 @@ def oci_pull(
         bzlmod_repository = name if is_bzlmod else None,
         reproducible = reproducible,
         config = config,
+        manifest_curl_download = manifest_curl_download,
     )
