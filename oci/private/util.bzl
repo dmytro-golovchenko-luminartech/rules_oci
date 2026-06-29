@@ -187,7 +187,7 @@ def _warning(rctx, message):
     date_output = rctx.execute(["date", "+%T.%N"], quiet = True)
     rctx.execute([
         "echo",
-        "{} \033[0;33mWARNING:\033[0m {}".format(date_output.stdout, message),
+        "{} \033[0;33mWARNING:\033[0m {}".format(date_output.stdout.replace("\n", ""), message),
     ], quiet = False)
 
 def _maybe_wrap_launcher_for_windows(ctx, bash_launcher):
