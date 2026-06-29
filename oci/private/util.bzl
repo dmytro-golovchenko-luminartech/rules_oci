@@ -184,9 +184,10 @@ def _validate_image_platform(rctx, image_config):
         ))
 
 def _warning(rctx, message):
+    date_output = rctx.execute(["date", "+%T.%N"], quiet = True)
     rctx.execute([
         "echo",
-        "$(date +%T.%N) \033[0;33mWARNING:\033[0m {}".format(message),
+        "{} \033[0;33mWARNING:\033[0m {}".format(date_output.stdout, message),
     ], quiet = False)
 
 def _maybe_wrap_launcher_for_windows(ctx, bash_launcher):
