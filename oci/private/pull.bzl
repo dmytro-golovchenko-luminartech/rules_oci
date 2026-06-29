@@ -157,7 +157,7 @@ def _download(rctx, authn, identifier, output, resource, headers = {}, allow_fai
 
     util.warning(rctx, "===========> _download kwargs={}".format(kwargs))
     if rctx.attr.manifest_curl_download:
-        return utils.curl_download(rctx, **kwargs)
+        return util.curl_download(rctx, **kwargs)
     return rctx.download(**kwargs)
 
 def _download_manifest(rctx, authn, identifier, output):
