@@ -11,6 +11,11 @@ load("//oci/private:util.bzl", "util")
 copy_to_directory = _copy_to_directory
 package_metadata = _package_metadata
 
+_CURL_DOWNLOAD_REGISTRIES = [
+    "harbor-eq-dc.sw-ci.kraken.as",
+    "artifactory.ibeo.as",
+]
+
 # attributes that are specific to image reference url. shared between multiple targets
 _IMAGE_REFERENCE_ATTRS = {
     "scheme": attr.string(
@@ -115,7 +120,7 @@ def _digest_into_blob_path(digest):
     digest_path = digest.replace(":", "/", 1)
     return "blobs/{}".format(digest_path)
 
-def _download(rctx, authn, identifier, output, resource, headers = {}, allow_fail = False, block = True, manifest_curl_download = False):
+def _download(rctx, authn, identifier, output, resource, headers = {}, allow_fail = False, block = True):
     "Use the Bazel Downloader to fetch from the remote registry"
 
     util.warning(rctx, "===========> _download using (authn={}, identifier={}, resource={})".format(authn, identifier, resource))
@@ -156,7 +161,7 @@ def _download(rctx, authn, identifier, output, resource, headers = {}, allow_fai
         kwargs["headers"] = headers
 
     util.warning(rctx, "===========> _download kwargs={}".format(kwargs))
-    if manifest_curl_download:
+    if rctx.attr.registry in _CURL_DOWNLOAD_REGISTRIES:
         return util.curl_download(rctx, **kwargs)
     return rctx.download(**kwargs)
 
@@ -174,7 +179,6 @@ def _download_manifest(rctx, authn, identifier, output):
         "manifests",
         allow_fail = True,
         headers = _DOWNLOAD_HEADERS,
-        manifest_curl_download = True,
     )
 
     if result.success:
@@ -374,10 +378,6 @@ oci_pull = repository_rule(
             "bazel_tags": attr.string_list(
                 doc = "Bazel tags to apply to generated targets of this rule",
             ),
-            "manifest_curl_download": attr.bool(
-                default = False,
-                doc = "EXPERIMENTAL! Use curl to download the manifest instead of the Bazel Downloader. This is a workaround for Bazel 7.0.0 and 7.0.1 which have a bug that prevents the Bazel Downloader from downloading manifests with OCI media types.",
-            ),
         },
     ),
     environ = authn.ENVIRON,
@@ -511,10 +511,6 @@ oci_alias = repository_rule(
             ),
             "bzlmod_repository": attr.string(
                 doc = "For error reporting. When called from a module extension, provides the original name of the repository prior to mapping",
-            ),
-            "manifest_curl_download": attr.bool(
-                default = False,
-                doc = "EXPERIMENTAL! Use curl to download the manifest instead of the Bazel Downloader. This is a workaround for Bazel 7.0.0 and 7.0.1 which have a bug that prevents the Bazel Downloader from downloading manifests with OCI media types.",
             ),
         },
     ),
