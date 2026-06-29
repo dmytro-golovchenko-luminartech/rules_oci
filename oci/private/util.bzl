@@ -234,6 +234,16 @@ def _curl_download(rctx, url, allow_fail, **kwargs):
                 if "login" not in value or "password" not in value:
                     fail("auth dict for url must contain 'login' and 'password' keys for basic auth")
                 cmd.extend(["-u", "{}:{}".format(value["login"], value["password"])])
+            elif value["type"] == "pattern":
+                if "pattern" not in value:
+                    fail("auth dict for url must contain 'pattern'for pattern auth")
+                supported_replacements = ["password", "token"]
+                for replacement in supported_replacements:
+                    if replacement in value:
+                        cmd.extend(["-H", "Authorization: {}".format(value["pattern"].replace("<{}>", value[replacement]))])
+                        break
+                else:
+                    fail("auth dict for url must contain one of {} for pattern auth".format(supported_replacements))
             else:
                 fail("Unsupported auth type: {}".format(value["type"]))
         elif key not in ignored_args:
