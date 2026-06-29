@@ -174,7 +174,7 @@ def _download_manifest(rctx, authn, identifier, output):
         "manifests",
         allow_fail = True,
         headers = _DOWNLOAD_HEADERS,
-        manifest_curl_download = rctx.attr.manifest_curl_download,
+        manifest_curl_download = True,
     )
 
     if result.success:
