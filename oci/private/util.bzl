@@ -190,7 +190,7 @@ def _warning(rctx, message):
         "{} \033[0;33mWARNING:\033[0m {}".format(date_output.stdout.strip(), message),
     ], quiet = False)
 
-def _get_temp_file():
+def _get_temp_file(rctx):
     """Return a temporary file path.
 
     Returns:
@@ -211,10 +211,10 @@ def _curl_download(rctx, url, allow_fail, **kwargs):
     Returns:
         The result of the curl command.
     """
-    ignored_args = ["sha256", "executable", "allow_fail", "block"]
+    ignored_args = ["sha256", "executable", "block"]
     cmd = ["curl", "-sSL", "--fail", url]
     if "output" not in kwargs and "sha256" in kwargs:
-        kwargs["output"] = _get_temp_file()
+        kwargs["output"] = _get_temp_file(rctx)
     for key, value in kwargs.items():
         if key == "output":
             cmd.extend(["-o", value])
@@ -237,7 +237,7 @@ def _curl_download(rctx, url, allow_fail, **kwargs):
             fail("Unsupported argument to _curl_download: {}".format(key))
     curl_result = rctx.execute(cmd)
     if curl_result.return_code != 0:
-        if kwargs.get("allow_fail", False):
+        if allow_fail:
             return struct(**curl_result.to_dict(), success = False)
         fail("curl failed with return code {}: \nSTDOUT:\n{}\nSTDERR:\n{}".format(
             curl_result.return_code,
@@ -249,7 +249,7 @@ def _curl_download(rctx, url, allow_fail, **kwargs):
     curl_result = struct(**curl_result.to_dict(), sha256 = sha256sum, size_bytes = size_bytes)
     if "sha256" in kwargs:
         if sha256sum != kwargs["sha256"]:
-            if kwargs.get("allow_fail", False):
+            if allow_fail:
                 return struct(**curl_result.to_dict(), success = False)
             fail("SHA256 mismatch for {}: expected {}, got {}".format(
                 kwargs["output"],
