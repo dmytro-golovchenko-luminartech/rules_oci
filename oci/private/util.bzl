@@ -198,7 +198,7 @@ def _get_temp_file(rctx):
     """
     temp_file_result = rctx.execute(["mktemp"], quiet = True)
 
-    return temp_file_pathtemp_file_result.stdout.strip()
+    return temp_file_result.stdout.strip()
 
 def _curl_download(rctx, url, allow_fail, **kwargs):
     """Download a file using curl.
@@ -222,13 +222,17 @@ def _curl_download(rctx, url, allow_fail, **kwargs):
             for header in value:
                 cmd.extend(["-H", header])
         elif key == "auth":
-            if not isinstance(value, dict):
-                fail("auth must be a dict with 'type', 'username', and 'password' keys")
+            if type(value) != "dict":
+                fail("auth must be a dict")
             if url in value:
                 value = value[url]
             else:
                 fail("auth dict must contain an entry for the URL being downloaded")
+            if "type" not in value:
+                fail("auth dict for url must contain 'type' key")
             if value["type"] == "basic":
+                if "username" not in value or "password" not in value:
+                    fail("auth dict for url must contain 'username' and 'password' keys for basic auth")
                 cmd.extend(["-u", "{}:{}".format(value["username"], value["password"])])
             else:
                 fail("Unsupported auth type: {}".format(value["type"]))
@@ -238,7 +242,7 @@ def _curl_download(rctx, url, allow_fail, **kwargs):
     curl_result = rctx.execute(cmd)
     if curl_result.return_code != 0:
         if allow_fail:
-            return struct(**curl_result.to_dict(), success = False)
+            return struct(success = False, **curl_result.to_dict())
         fail("curl failed with return code {}: \nSTDOUT:\n{}\nSTDERR:\n{}".format(
             curl_result.return_code,
             curl_result.stdout,
@@ -246,17 +250,17 @@ def _curl_download(rctx, url, allow_fail, **kwargs):
         ))
     sha256sum = _sha256(rctx, kwargs["output"])
     size_bytes = rctx.execute(["stat", "-c", "%s", kwargs["output"]]).stdout.strip()
-    curl_result = struct(**curl_result.to_dict(), sha256 = sha256sum, size_bytes = size_bytes)
+    curl_result = struct(sha256 = sha256sum, size_bytes = size_bytes, **curl_result.to_dict())
     if "sha256" in kwargs:
         if sha256sum != kwargs["sha256"]:
             if allow_fail:
-                return struct(**curl_result.to_dict(), success = False)
+                return struct(success = False, **curl_result.to_dict())
             fail("SHA256 mismatch for {}: expected {}, got {}".format(
                 kwargs["output"],
                 kwargs["sha256"],
                 sha256sum,
             ))
-    return struct(**curl_result.to_dict(), success = True)
+    return struct(success = True, **curl_result.to_dict())
 
 def _maybe_wrap_launcher_for_windows(ctx, bash_launcher):
     """Windows cannot directly execute a shell script.
