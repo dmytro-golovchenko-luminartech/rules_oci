@@ -238,11 +238,13 @@ def _curl_download(rctx, url, allow_fail, **kwargs):
                 if "pattern" not in value:
                     fail("auth dict for url must contain 'pattern'for pattern auth")
                 supported_replacements = ["password", "token"]
+                replacement_found = None
                 for replacement in supported_replacements:
                     if replacement in value:
                         cmd.extend(["-H", "Authorization: {}".format(value["pattern"].replace("<{}>", value[replacement]))])
+                        replacement_found = replacement
                         break
-                else:
+                if not replacement_found:
                     fail("auth dict for url must contain one of {} for pattern auth".format(supported_replacements))
             else:
                 fail("Unsupported auth type: {}".format(value["type"]))
