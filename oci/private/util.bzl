@@ -187,8 +187,75 @@ def _warning(rctx, message):
     date_output = rctx.execute(["date", "+%T.%N"], quiet = True)
     rctx.execute([
         "echo",
-        "{} \033[0;33mWARNING:\033[0m {}".format(date_output.stdout.replace("\n", ""), message),
+        "{} \033[0;33mWARNING:\033[0m {}".format(date_output.stdout.strip(), message),
     ], quiet = False)
+
+def _get_temp_file():
+    """Return a temporary file path.
+
+    Returns:
+        A temporary file path.
+    """
+    temp_file_result = rctx.execute(["mktemp"], quiet = True)
+
+    return temp_file_pathtemp_file_result.stdout.strip()
+
+def _curl_download(rctx, url, allow_fail, **kwargs):
+    """Download a file using curl.
+
+    Args:
+        rctx: repository context
+        url: the URL to download
+        allow_fail: if True, do not fail the build if the download fails, returns result struct with success=False
+        **kwargs: keyword arguments to pass to curl, e.g. url, output, headers, etc.
+    Returns:
+        The result of the curl command.
+    """
+    ignored_args = ["sha256", "executable", "allow_fail", "block"]
+    cmd = ["curl", "-sSL", "--fail", url]
+    if "output" not in kwargs and "sha256" in kwargs:
+        kwargs["output"] = _get_temp_file()
+    for key, value in kwargs.items():
+        if key == "output":
+            cmd.extend(["-o", value])
+        elif key == "headers":
+            for header in value:
+                cmd.extend(["-H", header])
+        elif key == "auth":
+            if not isinstance(value, dict):
+                fail("auth must be a dict with 'type', 'username', and 'password' keys")
+            if url in value:
+                value = value[url]
+            else:
+                fail("auth dict must contain an entry for the URL being downloaded")
+            if value["type"] == "basic":
+                cmd.extend(["-u", "{}:{}".format(value["username"], value["password"])])
+            else:
+                fail("Unsupported auth type: {}".format(value["type"]))
+            cmd.extend(["-u", value])
+        elif key in ignored_args:
+            fail("Unsupported argument to _curl_download: {}".format(key))
+    curl_result = rctx.execute(cmd)
+    if curl_result.return_code != 0:
+        if kwargs.get("allow_fail", False):
+            return struct(curl_result.to_dict(), success = False)
+        fail("curl failed with return code {}: \nSTDOUT:\n{}\nSTDERR:\n{}".format(
+            curl_result.return_code,
+            curl_result.stdout,
+            curl_result.stderr,
+        ))
+    sha256sum = _sha256(rctx, kwargs["output"])
+    size_bytes = rctx.execute(["stat", "-c", "%s", kwargs["output"]]).stdout.strip()
+    if "sha256" in kwargs:
+        if sha256sum != kwargs["sha256"]:
+            if kwargs.get("allow_fail", False):
+                return struct(curl_result.to_dict(), success = False, sha256 = sha256sum, size_bytes = size_bytes)
+            fail("SHA256 mismatch for {}: expected {}, got {}".format(
+                kwargs["output"],
+                kwargs["sha256"],
+                sha256sum,
+            ))
+    retun struct(curl_result.to_dict(), success = True, sha256 = sha256sum, size_bytes = size_bytes))
 
 def _maybe_wrap_launcher_for_windows(ctx, bash_launcher):
     """Windows cannot directly execute a shell script.
@@ -287,6 +354,7 @@ def _platform_triplet(platform_str):
     return os, architecture, variant
 
 util = struct(
+    curl_download = _curl_download,
     parse_www_authenticate = _parse_www_authenticate,
     parse_image = _parse_image,
     sha256 = _sha256,
