@@ -236,7 +236,6 @@ def _curl_download(rctx, url, allow_fail, **kwargs):
                 cmd.extend(["-u", "{}:{}".format(value["login"], value["password"])])
             else:
                 fail("Unsupported auth type: {}".format(value["type"]))
-            cmd.extend(["-u", value])
         elif key not in ignored_args:
             fail("Unsupported argument to _curl_download: {}".format(key))
     curl_result = rctx.execute(cmd)
