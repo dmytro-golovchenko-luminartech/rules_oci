@@ -213,6 +213,9 @@ def _curl_download(rctx, url, allow_fail, **kwargs):
     """
     ignored_args = ["sha256", "executable", "block"]
     cmd = ["curl", "-sSL", "--fail", url]
+    if "output" in kwargs and not kwargs["output"] startswith("/") and "/" in kwargs["output"]:
+        util.warning(rctx, "===========> _curl_download creating dirpatrh {} for output {}".format(paths.dirname(kwargs["output"]), kwargs["output"]))
+        rctx.execute(["mkdir", "-p", paths.dirname(kwargs["output"])])
     if "output" not in kwargs and "sha256" in kwargs:
         kwargs["output"] = _get_temp_file(rctx)
     for key, value in kwargs.items():
